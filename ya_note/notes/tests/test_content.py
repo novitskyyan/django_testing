@@ -54,18 +54,8 @@ class TestContent(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('form', response.context)
 
-
     def test_edit_page_has_forms(self):
         url = reverse('notes:edit', args=[self.note.slug])
         response = self.author_client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertIn('form', response.context)
-
-
-
-
-
-
-
-
-
