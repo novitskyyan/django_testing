@@ -67,7 +67,6 @@ class TestRoutes(TestCase):
                     response = client.get(url)
                     self.assertEqual(response.status_code, status)
 
-
     def test_redirect_for_anonymous_client(self):
         urls = (
             ('notes:list', None),
@@ -85,7 +84,3 @@ class TestRoutes(TestCase):
                 redirect_url = f'{login_url}?next={url}'
                 response = self.client.get(url)
                 self.assertRedirects(response, redirect_url)
-
-
-
-

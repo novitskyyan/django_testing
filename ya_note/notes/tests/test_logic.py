@@ -34,7 +34,6 @@ class TestLogic(TestCase):
             'author': cls.author
         }
 
-
     def test_authenticated_user_add_note(self):
         self.author_client.force_login(self.author)
         url = reverse('notes:add')
@@ -87,8 +86,3 @@ class TestLogic(TestCase):
         url = reverse('notes:edit', args=(self.note.slug,))
         response = self.reader_client.post(url, data=data)
         self.assertEqual(response.status_code, 404)
-
-
-
-
-
