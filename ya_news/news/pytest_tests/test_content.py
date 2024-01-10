@@ -3,9 +3,11 @@ from django.conf import settings
 from django.urls import reverse
 
 from news.forms import CommentForm
-from .global_constants import NEWS_HOME_URL, NEWS_DETAIL_URL
+from .global_constants import NEWS_HOME_URL, NEWS_DETAIL_URL, pytestmark
 
 
+
+@pytestmark
 @pytest.mark.usefixtures('news_on_home_page')
 def test_news_count_on_homepage(admin_client):
     url = reverse(NEWS_HOME_URL)
