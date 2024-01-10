@@ -1,54 +1,54 @@
 from http import HTTPStatus
 
-from django.urls import reverse
-
 import pytest
+from django.urls import reverse
 from pytest_django.asserts import assertRedirects
 
-
-@pytest.mark.parametrize(
-    'name',
-    ('news:home', 'users:login', 'users:logout', 'users:signup', 'news:detail')
-)
-@pytest.mark.django_db
-def test_pages_available_for_anonymous_user(client, news, name):
-    if name == 'news:detail':
-        url = reverse(name, args=(news.pk,))
-    else:
-        url = reverse(name)
-    response = client.get(url)
-    assert response.status_code == HTTPStatus.OK
+from news.pytest_tests.global_constants import NEWS_DETAIL_URL, \
+    USERS_LOGIN_URL, NEWS_DELETE_URL, NEWS_EDIT_URL, NEWS_HOME_URL, \
+    USERS_SIGNUP_URL, USERS_LOGOUT_URL, AUTHOR_CLIENT, ADMIN_CLIENT
 
 
 @pytest.mark.parametrize(
-    'parametrized_client, expected_status',
+    'name_url, parametrized_client, expected_status',
+
     (
-        (pytest.lazy_fixture('author_client'), HTTPStatus.OK),
-        (pytest.lazy_fixture('admin_client'), HTTPStatus.NOT_FOUND)
-    ),
-)
-@pytest.mark.parametrize(
-    'name',
-    ('news:delete', 'news:edit'),
-)
-@pytest.mark.django_db
-def test_edit_and_delete_comment_for_different_users(
-        parametrized_client, name, comment, expected_status
+            (NEWS_HOME_URL, ADMIN_CLIENT, HTTPStatus.OK),
+            (USERS_LOGIN_URL, ADMIN_CLIENT, HTTPStatus.OK),
+            (USERS_LOGOUT_URL, ADMIN_CLIENT, HTTPStatus.OK),
+            (USERS_SIGNUP_URL, ADMIN_CLIENT, HTTPStatus.OK),
+            (NEWS_DETAIL_URL, ADMIN_CLIENT, HTTPStatus.OK),
+            (NEWS_DELETE_URL, AUTHOR_CLIENT, HTTPStatus.OK),
+            (NEWS_DELETE_URL, ADMIN_CLIENT, HTTPStatus.NOT_FOUND),
+            (NEWS_EDIT_URL, AUTHOR_CLIENT, HTTPStatus.OK),
+            (NEWS_EDIT_URL, ADMIN_CLIENT, HTTPStatus.NOT_FOUND)
+    ))
+def test_pages_available_for_anonymous_user(
+        parametrized_client,
+        news,
+        comment,
+        name_url,
+        expected_status
 ):
-    url = reverse(name, args=(comment.id,))
+    if name_url == NEWS_DETAIL_URL:
+        url = reverse(name_url, args=(news.pk,))
+    elif name_url == NEWS_DELETE_URL or name_url == NEWS_EDIT_URL:
+        url = reverse(name_url, args=(comment.id,))
+    else:
+        url = reverse(name_url)
     response = parametrized_client.get(url)
     assert response.status_code == expected_status
 
 
 @pytest.mark.parametrize(
     'name',
-    ('news:delete', 'news:edit'),
+    (NEWS_DELETE_URL, NEWS_EDIT_URL),
 )
 def test_comment_anonymous_cant_edit_or_delete(
         client, comment, name
 ):
     url = reverse(name, args=(comment.pk,))
     response = client.get(url)
-    url_login = reverse('users:login')
+    url_login = reverse(USERS_LOGIN_URL)
     expected_url = f'{url_login}?next={url}'
     assertRedirects(response, expected_url)
