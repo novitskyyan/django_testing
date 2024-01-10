@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 import pytest
 from django.conf import settings
 
-from news.forms import BAD_WORDS
 from news.models import Comment, News
 
 
@@ -38,20 +37,6 @@ def comment(news, author):
 
 
 @pytest.fixture
-def form_data():
-    return {
-        'text': 'Комментарий пользователя'
-    }
-
-
-@pytest.fixture
-def new_form_data():
-    return {
-        'text': 'Новый комментарий пользователя'
-    }
-
-
-@pytest.fixture
 def news_on_home_page():
     for index in range(settings.NEWS_COUNT_ON_HOME_PAGE):
         news = News(title=f'Новость {index}', text='Просто текст.')
@@ -83,8 +68,3 @@ def all_news():
         for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
     ]
     return News.objects.bulk_create(all_news)
-
-
-@pytest.fixture
-def bad_comment_data():
-    return {'text': f'Какой-то текст, {BAD_WORDS[0]}, еще текст'}

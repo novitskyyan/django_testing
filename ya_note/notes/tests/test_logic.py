@@ -1,66 +1,54 @@
+from http import HTTPStatus
+
 from django.contrib.auth import get_user_model
-from django.test import TestCase, Client
 from django.urls import reverse
 from pytils.translit import slugify
 
 from notes.forms import WARNING
 from notes.models import Note
+from .base_test import BaseTestContent, AUTH_USERS_LOGIN_URL
+from .base_test import NOTES_ADD_URL, NOTES_EDIT_URL, NOTES_SUCCESS_URL
 
 User = get_user_model()
 
 
-class TestLogic(TestCase):
-
-    @classmethod
-    def setUpTestData(cls):
-        cls.author = User.objects.create(
-            username='Автор'
-        )
-        cls.reader = User.objects.create(
-            username='Читатель'
-        )
-        cls.author_client = Client()
-        cls.reader_client = Client()
-        cls.note = Note.objects.create(
-            title='Заголовок 1',
-            text='Текст заметки',
-            slug='note_1',
-            author=cls.author
-        )
-        cls.request_data = {
-            'title': 'Заголовок 2',
-            'text': 'Текст',
-            'slug': 'note_2',
-            'author': cls.author
-        }
+class TestLogic(BaseTestContent):
 
     def test_authenticated_user_add_note(self):
-        self.author_client.force_login(self.author)
-        url = reverse('notes:add')
+        count_of_notes_before = Note.objects.count()
+        url = reverse(NOTES_ADD_URL)
         response = self.author_client.post(url, data=self.request_data)
-        self.assertRedirects(response, reverse('notes:success'))
+        self.assertRedirects(response, reverse(NOTES_SUCCESS_URL))
+        count_of_notes_after = Note.objects.count()
+        self.assertEqual(count_of_notes_before, count_of_notes_after - 1)
 
     def test_anonymous_user_cant_create_note(self):
-        url = reverse('notes:add')
+        count_of_notes_before = Note.objects.count()
+        url = reverse(NOTES_ADD_URL)
         response = self.client.post(url, data=self.request_data)
-        login_url = reverse('users:login')
+        login_url = reverse(AUTH_USERS_LOGIN_URL)
         expected_url = f'{login_url}?next={url}'
+        count_of_notes_after = Note.objects.count()
         self.assertRedirects(response, expected_url)
+        self.assertEqual(count_of_notes_before, count_of_notes_after)
 
     def test_no_create_note_with_same_slug(self):
+        count_of_notes_before = Note.objects.count()
         self.request_data['slug'] = self.note.slug
         self.author_client.force_login(self.author)
-        url = reverse('notes:add')
+        url = reverse(NOTES_ADD_URL)
         response = self.author_client.post(url, data=self.request_data)
+        count_of_notes_after = Note.objects.count()
         self.assertFormError(response, 'form', 'slug',
                              errors=self.note.slug + WARNING)
+        self.assertEqual(count_of_notes_before, count_of_notes_after)
 
     def test_generate_slug(self):
         self.author_client.force_login(self.author)
         del self.request_data['slug']
-        url = reverse('notes:add')
+        url = reverse(NOTES_ADD_URL)
         response = self.author_client.post(url, data=self.request_data)
-        self.assertRedirects(response, reverse('notes:success'))
+        self.assertRedirects(response, reverse(NOTES_SUCCESS_URL))
         note = Note.objects.last()
         expected_slug = slugify(self.request_data['title'])
         self.assertEqual(note.slug, expected_slug)
@@ -71,9 +59,9 @@ class TestLogic(TestCase):
             'text': 'Новый измененный текст',
         }
         self.author_client.force_login(self.author)
-        url = reverse('notes:edit', args=(self.note.slug,))
+        url = reverse(NOTES_EDIT_URL, args=(self.note.slug,))
         response = self.author_client.post(url, data=data)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
         note = Note.objects.first()
         self.assertEqual(note.text, data['text'])
 
@@ -83,6 +71,6 @@ class TestLogic(TestCase):
             'text': 'Новый измененный текст',
         }
         self.reader_client.force_login(self.reader)
-        url = reverse('notes:edit', args=(self.note.slug,))
+        url = reverse(NOTES_EDIT_URL, args=(self.note.slug,))
         response = self.reader_client.post(url, data=data)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
