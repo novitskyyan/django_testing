@@ -96,4 +96,3 @@ def news_delete(comment):
 @pytest.fixture
 def news_home():
     return reverse('news:home')
-

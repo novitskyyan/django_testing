@@ -7,8 +7,6 @@ from .conftest import pytestmark
 from .global_constants import NEWS_DETAIL_URL, NEWS_HOME
 
 
-
-
 @pytestmark
 @pytest.mark.usefixtures('news_on_home_page')
 def test_news_count_on_homepage(admin_client):
