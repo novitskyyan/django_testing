@@ -7,7 +7,7 @@ from pytils.translit import slugify
 from notes.forms import WARNING
 from notes.models import Note
 from .base_test import BaseTestContent, AUTH_USERS_LOGIN_URL
-from .base_test import NOTES_ADD_URL, NOTES_EDIT_URL, NOTES_SUCCESS_URL
+from .base_test import NOTES_ADD_URL, NOTES_SUCCESS_URL
 
 User = get_user_model()
 
@@ -59,8 +59,7 @@ class TestLogic(BaseTestContent):
             'text': 'Новый измененный текст',
         }
         self.author_client.force_login(self.author)
-        url = reverse(NOTES_EDIT_URL, args=(self.note.slug,))
-        response = self.author_client.post(url, data=data)
+        response = self.author_client.post(self.notes_for_edit, data=data)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         note = Note.objects.first()
         self.assertEqual(note.text, data['text'])
@@ -71,6 +70,5 @@ class TestLogic(BaseTestContent):
             'text': 'Новый измененный текст',
         }
         self.reader_client.force_login(self.reader)
-        url = reverse(NOTES_EDIT_URL, args=(self.note.slug,))
-        response = self.reader_client.post(url, data=data)
+        response = self.reader_client.post(self.notes_for_edit, data=data)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)

@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+import pytest
 from django.forms import model_to_dict
 from django.urls import reverse
 from pytest_django.asserts import assertRedirects, assertFormError
@@ -7,7 +8,7 @@ from pytest_django.asserts import assertRedirects, assertFormError
 from news.forms import WARNING, BAD_WORDS
 from news.models import Comment
 from news.pytest_tests.global_constants import NEWS_DETAIL_URL, \
-    NEWS_DELETE_URL, NEWS_EDIT_URL, USERS_LOGIN_URL
+    USERS_LOGIN_URL
 
 form_data = {
     'text': 'Комментарий пользователя',
@@ -24,30 +25,30 @@ bad_comment_data = {
 }
 
 
-def test_user_can_create_comment(author_client, author, news):
-    url = reverse(NEWS_DETAIL_URL, args=(news.pk,))
+@pytest.mark.usefixtures('news_detail', 'news')
+def test_user_can_create_comment(author_client, author, news, news_detail):
     assert Comment.objects.count() == 0
-    response = author_client.post(url, data=form_data)
-    assertRedirects(response, f'{url}#comments')
+    response = author_client.post(news_detail, data=form_data)
+    assertRedirects(response, f'{news_detail}#comments')
     assert Comment.objects.count() == 1
     comment = Comment.objects.get()
     assert comment.text == form_data['text']
 
 
-def test_anonymous_user_cant_create_comment(client, news):
-    url = reverse(NEWS_DETAIL_URL, args=(news.pk,))
-    response = client.post(url, data=form_data)
+@pytest.mark.usefixtures('news_detail', 'news')
+def test_anonymous_user_cant_create_comment(client, news, news_detail):
+    response = client.post(news_detail, data=form_data)
     url_login = reverse(USERS_LOGIN_URL)
-    expected_url = f'{url_login}?next={url}'
+    expected_url = f'{url_login}?next={news_detail}'
     assertRedirects(response, expected_url)
     assert Comment.objects.count() == 0
 
 
-def test_author_can_edit_comment(author_client, comment):
+@pytest.mark.usefixtures('news_edit')
+def test_author_can_edit_comment(author_client, comment, news_edit):
     comment_before_refresh = model_to_dict(comment, fields='text')
     original_comment_without_text = model_to_dict(comment, exclude='text')
-    url = reverse(NEWS_EDIT_URL, args=(comment.pk,))
-    author_client.post(url, data=new_form_data)
+    author_client.post(news_edit, data=new_form_data)
     comment.refresh_from_db()
     new_comment_without_text = model_to_dict(comment, exclude='text')
     new_comment_after_refresh = model_to_dict(comment, fields='text')
@@ -56,29 +57,26 @@ def test_author_can_edit_comment(author_client, comment):
 
 
 def test_user_cant_edit_comment_of_another_user(
-        admin_client, comment
+        admin_client, comment, news_edit
 ):
     comment_before_refresh = model_to_dict(comment)
-    url = reverse(NEWS_EDIT_URL, args=(comment.pk,))
-    response = admin_client.post(url, data=new_form_data)
+    response = admin_client.post(news_edit, data=new_form_data)
     assert response.status_code == HTTPStatus.NOT_FOUND
     comment.refresh_from_db()
     assert model_to_dict(comment) == comment_before_refresh
 
 
 def test_user_cant_delete_comment_of_another_user(
-        admin_client, comment
+        admin_client, comment, news_delete
 ):
-    url = reverse(NEWS_DELETE_URL, args=(comment.pk,))
-    response = admin_client.delete(url)
+    response = admin_client.delete(news_delete)
     assert response.status_code == HTTPStatus.NOT_FOUND
     comments_count = Comment.objects.count()
     assert comments_count == 1
 
 
-def test_author_can_delete_comment(author_client, comment):
-    url = reverse(NEWS_DELETE_URL, args=(comment.pk,))
-    author_client.delete(url)
+def test_author_can_delete_comment(author_client, comment, news_delete):
+    author_client.delete(news_delete)
     assert Comment.objects.count() == 0
 
 

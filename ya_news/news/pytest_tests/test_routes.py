@@ -25,14 +25,19 @@ from news.pytest_tests.global_constants import NEWS_DETAIL_URL, \
 def test_pages_available_for_anonymous_user(
         parametrized_client,
         news,
+        news_detail,
+        news_edit,
+        news_delete,
         comment,
         name_url,
         expected_status
 ):
     if name_url == NEWS_DETAIL_URL:
-        url = reverse(name_url, args=(news.pk,))
-    elif name_url == NEWS_DELETE_URL or name_url == NEWS_EDIT_URL:
-        url = reverse(name_url, args=(comment.id,))
+        url = news_detail
+    elif name_url == NEWS_DELETE_URL:
+        url = news_delete
+    elif name_url == NEWS_EDIT_URL:
+        url = news_edit
     else:
         url = reverse(name_url)
     response = parametrized_client.get(url)

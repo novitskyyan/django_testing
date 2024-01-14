@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 import pytest
 from django.conf import settings
+from django.urls import reverse
 
 from news.models import Comment, News
 
@@ -41,6 +42,11 @@ def news_on_home_page():
     for index in range(settings.NEWS_COUNT_ON_HOME_PAGE):
         news = News(title=f'Новость {index}', text='Просто текст.')
         news.save()
+
+
+@pytest.fixture
+def news_detail(news):
+    return reverse('news:detail', args=(news.pk,))
 
 
 @pytest.fixture
