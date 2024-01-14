@@ -1,6 +1,5 @@
 from http import HTTPStatus
 
-import pytest
 from django.forms import model_to_dict
 from django.urls import reverse
 from pytest_django.asserts import assertRedirects, assertFormError
@@ -25,7 +24,6 @@ bad_comment_data = {
 }
 
 
-@pytest.mark.usefixtures('news_detail', 'news')
 def test_user_can_create_comment(author_client, author, news, news_detail):
     assert Comment.objects.count() == 0
     response = author_client.post(news_detail, data=form_data)
@@ -35,7 +33,6 @@ def test_user_can_create_comment(author_client, author, news, news_detail):
     assert comment.text == form_data['text']
 
 
-@pytest.mark.usefixtures('news_detail', 'news')
 def test_anonymous_user_cant_create_comment(client, news, news_detail):
     response = client.post(news_detail, data=form_data)
     url_login = reverse(USERS_LOGIN_URL)
@@ -44,7 +41,6 @@ def test_anonymous_user_cant_create_comment(client, news, news_detail):
     assert Comment.objects.count() == 0
 
 
-@pytest.mark.usefixtures('news_edit')
 def test_author_can_edit_comment(author_client, comment, news_edit):
     comment_before_refresh = model_to_dict(comment, fields='text')
     original_comment_without_text = model_to_dict(comment, exclude='text')

@@ -6,6 +6,8 @@ from django.urls import reverse
 
 from news.models import Comment, News
 
+pytestmark = pytest.mark.django_db
+
 
 @pytest.fixture
 def author(django_user_model):
@@ -74,3 +76,24 @@ def all_news():
         for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
     ]
     return News.objects.bulk_create(all_news)
+
+
+@pytest.fixture
+def news_detail(news):
+    return reverse('news:detail', args=(news.pk,))
+
+
+@pytest.fixture
+def news_edit(comment):
+    return reverse('news:edit', args=(comment.pk,))
+
+
+@pytest.fixture
+def news_delete(comment):
+    return reverse('news:delete', args=(comment.pk,))
+
+
+@pytest.fixture
+def news_home():
+    return reverse('news:home')
+

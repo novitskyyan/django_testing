@@ -3,8 +3,10 @@ from django.conf import settings
 from django.urls import reverse
 
 from news.forms import CommentForm
-from .global_constants import NEWS_DETAIL_URL, pytestmark, \
-    news_detail, NEWS_HOME
+from .conftest import pytestmark
+from .global_constants import NEWS_DETAIL_URL, NEWS_HOME
+
+
 
 
 @pytestmark
@@ -32,13 +34,11 @@ def test_comments_order(client, news_with_comments):
     assert all_dates == sorted(all_dates)
 
 
-@pytest.mark.usefixtures('news_detail')
-def test_anonymous_client_has_no_form(client, news):
+def test_anonymous_client_has_no_form(client, news, news_detail):
     response = client.get(news_detail)
     assert 'form' not in response.context
 
 
-@pytest.mark.usefixtures('news_detail')
 def test_authorized_client_has_form(author_client, news, news_detail):
     response = author_client.get(news_detail)
     assert 'form' in response.context
