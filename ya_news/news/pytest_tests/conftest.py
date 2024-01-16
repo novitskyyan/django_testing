@@ -5,6 +5,7 @@ from django.conf import settings
 from django.urls import reverse
 
 from news.models import Comment, News
+from news.pytest_tests.global_constants import USERS_LOGIN_URL
 
 pytestmark = pytest.mark.django_db
 
@@ -96,3 +97,28 @@ def news_delete(comment):
 @pytest.fixture
 def news_home():
     return reverse('news:home')
+
+
+@pytest.fixture
+def users_logout():
+    return reverse('users:logout')
+
+
+@pytest.fixture
+def users_login():
+    return reverse('users:login')
+
+
+@pytest.fixture
+def users_signup():
+    return reverse('users:signup')
+
+
+@pytest.fixture
+def news_detail_with_comments(news_with_comments):
+    return reverse('news:detail', args=(news_with_comments.pk,))
+
+
+@pytest.fixture
+def expected_url_for_login(news_detail):
+    return f'{USERS_LOGIN_URL}?next={news_detail}'

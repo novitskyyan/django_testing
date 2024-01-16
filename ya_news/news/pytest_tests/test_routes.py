@@ -7,7 +7,8 @@ from pytest_django.asserts import assertRedirects
 from news.pytest_tests.global_constants import (
     NEWS_DETAIL_URL,
     USERS_LOGIN_URL,
-    NEWS_DELETE_URL, NEWS_EDIT_URL,
+    NEWS_DELETE_URL,
+    NEWS_EDIT_URL,
     NEWS_HOME_URL,
     USERS_SIGNUP_URL,
     USERS_LOGOUT_URL
@@ -38,6 +39,9 @@ def test_pages_available_for_anonymous_user(
         news_detail,
         news_edit,
         news_delete,
+        users_logout,
+        users_login,
+        users_signup,
         comment,
         name_url,
         expected_status
@@ -48,6 +52,12 @@ def test_pages_available_for_anonymous_user(
         url = news_delete
     elif name_url == NEWS_EDIT_URL:
         url = news_edit
+    elif name_url == USERS_LOGOUT_URL:
+        url = users_logout
+    elif name_url == USERS_LOGIN_URL:
+        url = users_login
+    elif name_url == USERS_SIGNUP_URL:
+        url = users_signup
     else:
         url = reverse(name_url)
     response = parametrized_client.get(url)
@@ -59,10 +69,12 @@ def test_pages_available_for_anonymous_user(
     (NEWS_DELETE_URL, NEWS_EDIT_URL),
 )
 def test_comment_anonymous_cant_edit_or_delete(
-        client, comment, name
+        client, comment, name, news_delete, news_edit
 ):
-    url = reverse(name, args=(comment.pk,))
+    if name == NEWS_DELETE_URL:
+        url = news_delete
+    elif name == NEWS_EDIT_URL:
+        url = news_edit
     response = client.get(url)
-    url_login = reverse(USERS_LOGIN_URL)
-    expected_url = f'{url_login}?next={url}'
+    expected_url = f'{USERS_LOGIN_URL}?next={url}'
     assertRedirects(response, expected_url)

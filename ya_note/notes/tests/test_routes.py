@@ -27,8 +27,7 @@ class TestRoutes(BaseTestContent):
 
         for name, client, status in urls:
             with self.subTest(name=name, client=client, status=status):
-                url = reverse(name)
-                response = client.get(url)
+                response = client.get(name)
                 self.assertEqual(response.status_code, status)
 
     def test_note_available_or_not_for_users(self):
@@ -51,17 +50,16 @@ class TestRoutes(BaseTestContent):
 
     def test_redirect_for_anonymous_client(self):
         urls = (
-            (NOTES_LIST_URL, None),
-            (NOTES_SUCCESS_URL, None),
-            (NOTES_ADD_URL, None),
-            (NOTES_DETAIL_URL, (self.note.slug,)),
-            (NOTES_EDIT_URL, (self.note.slug,)),
-            (NOTES_DELETE_URL, (self.note.slug,)),
+            NOTES_LIST_URL,
+            NOTES_SUCCESS_URL,
+            NOTES_ADD_URL,
+            self.notes_for_detail,
+            self.notes_for_edit,
+            self.notes_for_delete,
         )
 
-        for name, args in urls:
+        for name in urls:
             with self.subTest(name=name):
-                url = reverse(name, args=args)
-                redirect_url = f'{LOGIN_URL}?next={url}'
-                response = self.client.get(url)
+                redirect_url = f'{LOGIN_URL}?next={name}'
+                response = self.client.get(name)
                 self.assertRedirects(response, redirect_url)

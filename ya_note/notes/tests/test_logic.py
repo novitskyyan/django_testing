@@ -1,7 +1,6 @@
 from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
-from django.urls import reverse
 from pytils.translit import slugify
 
 from notes.forms import WARNING
@@ -16,18 +15,18 @@ class TestLogic(BaseTestContent):
 
     def test_authenticated_user_add_note(self):
         count_of_notes_before = Note.objects.count()
-        url = reverse(NOTES_ADD_URL)
-        response = self.author_client.post(url, data=self.request_data)
-        self.assertRedirects(response, reverse(NOTES_SUCCESS_URL))
+        response = self.author_client.post(
+            NOTES_ADD_URL,
+            data=self.request_data
+        )
+        self.assertRedirects(response, NOTES_SUCCESS_URL)
         count_of_notes_after = Note.objects.count()
         self.assertEqual(count_of_notes_before, count_of_notes_after - 1)
 
     def test_anonymous_user_cant_create_note(self):
         count_of_notes_before = Note.objects.count()
-        url = reverse(NOTES_ADD_URL)
-        response = self.client.post(url, data=self.request_data)
-        login_url = reverse(AUTH_USERS_LOGIN_URL)
-        expected_url = f'{login_url}?next={url}'
+        response = self.client.post(NOTES_ADD_URL, data=self.request_data)
+        expected_url = f'{AUTH_USERS_LOGIN_URL}?next={NOTES_ADD_URL}'
         count_of_notes_after = Note.objects.count()
         self.assertRedirects(response, expected_url)
         self.assertEqual(count_of_notes_before, count_of_notes_after)
@@ -36,8 +35,10 @@ class TestLogic(BaseTestContent):
         count_of_notes_before = Note.objects.count()
         self.request_data['slug'] = self.note.slug
         self.author_client.force_login(self.author)
-        url = reverse(NOTES_ADD_URL)
-        response = self.author_client.post(url, data=self.request_data)
+        response = self.author_client.post(
+            NOTES_ADD_URL,
+            data=self.request_data
+        )
         count_of_notes_after = Note.objects.count()
         self.assertFormError(response, 'form', 'slug',
                              errors=self.note.slug + WARNING)
@@ -46,9 +47,11 @@ class TestLogic(BaseTestContent):
     def test_generate_slug(self):
         self.author_client.force_login(self.author)
         del self.request_data['slug']
-        url = reverse(NOTES_ADD_URL)
-        response = self.author_client.post(url, data=self.request_data)
-        self.assertRedirects(response, reverse(NOTES_SUCCESS_URL))
+        response = self.author_client.post(
+            NOTES_ADD_URL,
+            data=self.request_data
+        )
+        self.assertRedirects(response, NOTES_SUCCESS_URL)
         note = Note.objects.last()
         expected_slug = slugify(self.request_data['title'])
         self.assertEqual(note.slug, expected_slug)

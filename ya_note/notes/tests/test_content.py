@@ -1,7 +1,6 @@
 from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
-from django.urls import reverse
 
 from .base_test import BaseTestContent, NOTES_LIST_URL, NOTES_ADD_URL
 from ..forms import NoteForm
@@ -13,8 +12,7 @@ class TestContent(BaseTestContent):
 
     def test_notes_list(self):
         with self.subTest(user=self.author):
-            url = reverse(NOTES_LIST_URL)
-            response = self.author_client.get(url)
+            response = self.author_client.get(NOTES_LIST_URL)
             self.assertEqual(response.status_code, HTTPStatus.OK)
             self.assertEqual(
                 response.context['object_list'].count(), 1
@@ -22,8 +20,7 @@ class TestContent(BaseTestContent):
             self.assertIn(self.note, response.context['object_list'])
 
     def test_reader_not_list(self):
-        url = reverse(NOTES_LIST_URL)
-        response = self.reader_client.get(url)
+        response = self.reader_client.get(NOTES_LIST_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             response.context['object_list'].count(), 0
@@ -31,8 +28,7 @@ class TestContent(BaseTestContent):
         self.assertNotIn(self.note, response.context['object_list'])
 
     def test_add_page_has_forms(self):
-        url = reverse(NOTES_ADD_URL)
-        response = self.author_client.get(url)
+        response = self.author_client.get(NOTES_ADD_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertIn('form', response.context)
 

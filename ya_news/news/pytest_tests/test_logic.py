@@ -1,13 +1,10 @@
 from http import HTTPStatus
 
 from django.forms import model_to_dict
-from django.urls import reverse
 from pytest_django.asserts import assertRedirects, assertFormError
 
 from news.forms import WARNING, BAD_WORDS
 from news.models import Comment
-from news.pytest_tests.global_constants import NEWS_DETAIL_URL, \
-    USERS_LOGIN_URL
 
 form_data = {
     'text': 'Комментарий пользователя',
@@ -33,11 +30,14 @@ def test_user_can_create_comment(author_client, author, news, news_detail):
     assert comment.text == form_data['text']
 
 
-def test_anonymous_user_cant_create_comment(client, news, news_detail):
+def test_anonymous_user_cant_create_comment(
+        client,
+        news,
+        news_detail,
+        expected_url_for_login
+):
     response = client.post(news_detail, data=form_data)
-    url_login = reverse(USERS_LOGIN_URL)
-    expected_url = f'{url_login}?next={news_detail}'
-    assertRedirects(response, expected_url)
+    assertRedirects(response, expected_url_for_login)
     assert Comment.objects.count() == 0
 
 
@@ -77,10 +77,11 @@ def test_author_can_delete_comment(author_client, comment, news_delete):
 
 
 def test_forbiddance_of_bad_words_on_comment(
-        author_client, news
+        author_client,
+        news,
+        news_detail
 ):
-    url = reverse(NEWS_DETAIL_URL, args=(news.pk,))
-    response = author_client.post(url, data=bad_comment_data)
+    response = author_client.post(news_detail, data=bad_comment_data)
     assertFormError(
         response,
         form='form',
